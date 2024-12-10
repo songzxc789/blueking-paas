@@ -16,7 +16,6 @@
 # to the current version of the project delivered to anyone in the future.
 
 import pytest
-import yaml
 from django.conf import settings
 from django.urls import reverse
 
@@ -25,7 +24,7 @@ pytestmark = pytest.mark.django_db
 
 class TestAppDescTransform:
     @pytest.mark.parametrize(
-        ("spec2_yaml", "expected_spec3_data", "expected_spec3_yaml"),
+        ("spec2_yaml", "expected_spec3_yaml"),
         [
             # Test 1: two modules
             (
@@ -128,124 +127,6 @@ modules:
     package_plans:
       web: Starter
 """,
-                {
-                    "specVersion": 3,
-                    "appVersion": "1.0",
-                    "app": {
-                        "region": "default",
-                        "bkAppCode": "foo-app",
-                        "bkAppName": "默认应用名称",
-                        "market": {
-                            "category": "运维工具",
-                            "introduction": "应用简介",
-                            "description": "应用描述",
-                            "displayOptions": {
-                                "width": 800,
-                                "height": 600,
-                                "openMode": "desktop",
-                                "isWinMaximize": False,
-                                "visible": True,
-                            },
-                        },
-                    },
-                    "modules": [
-                        {
-                            "name": "frontend",
-                            "isDefault": True,
-                            "sourceDir": "src/frontend",
-                            "language": "NodeJS",
-                            "spec": {
-                                "addons": [{"name": "mysql"}, {"name": "rabbitmq"}],
-                                "configuration": {
-                                    "env": [
-                                        {"name": "FOO", "value": "value_of_foo", "description": "环境变量描述文件"}
-                                    ]
-                                },
-                                "processes": [
-                                    {
-                                        "name": "web",
-                                        "procCommand": "npm run server",
-                                        "resQuotaPlan": "4C1G",
-                                        "replicas": 2,
-                                        "probes": {
-                                            "liveness": {"exec": {"command": ["cat"]}},
-                                            "readiness": {"httpGet": {"path": "/healthz", "port": 80}},
-                                        },
-                                        "services": [
-                                            {
-                                                "name": "web",
-                                                "protocol": "TCP",
-                                                "exposedType": {"name": "bk/http"},
-                                                "targetPort": settings.CONTAINER_PORT,
-                                                "port": 80,
-                                            }
-                                        ],
-                                    }
-                                ],
-                                "hooks": {"preRelease": {"procCommand": "bin/pre-release.sh"}},
-                                "svcDiscovery": {"bkSaaS": [{"bkAppCode": "bk-iam"}, {"bkAppCode": "bk-user"}]},
-                            },
-                        },
-                        {
-                            "name": "api_server",
-                            "isDefault": False,
-                            "sourceDir": "src/backend",
-                            "language": "Python",
-                            "spec": {
-                                "addons": [
-                                    {"name": "mysql", "shareFrom": "default"},
-                                    {"name": "rabbitmq", "shareFrom": "default"},
-                                ],
-                                "configuration": {
-                                    "env": [
-                                        {"name": "FOO", "value": "value_of_foo", "description": "环境变量描述文件"}
-                                    ]
-                                },
-                                "processes": [
-                                    {
-                                        "name": "server",
-                                        "procCommand": "python manage.py runserver",
-                                        "resQuotaPlan": "4C1G",
-                                        "replicas": 2,
-                                        "probes": {
-                                            "liveness": {"exec": {"command": ["/bin/bash", "-c", "echo ready"]}},
-                                            "readiness": {
-                                                "httpGet": {
-                                                    "path": "/healthz",
-                                                    "port": 80,
-                                                    "httpHeaders": [
-                                                        {"name": "Content-Type"},
-                                                        {"value": "application/json"},
-                                                    ],
-                                                }
-                                            },
-                                            "startup": {
-                                                "tcpSocket": {"port": 8000, "host": "app.host.com"},
-                                                "initialDelaySeconds": 0,
-                                                "timeoutSeconds": 1,
-                                                "periodSeconds": 10,
-                                                "successThreshold": 1,
-                                                "failureThreshold": 3,
-                                            },
-                                        },
-                                        "services": [
-                                            {
-                                                "name": "server",
-                                                "protocol": "TCP",
-                                                "targetPort": settings.CONTAINER_PORT,
-                                                "port": 80,
-                                            }
-                                        ],
-                                    }
-                                ],
-                                "hooks": {"preRelease": {"procCommand": "python manage.py migrate"}},
-                                "svcDiscovery": {
-                                    "bkSaaS": [{"bkAppCode": "bk-iam"}, {"bkAppCode": "bk-user", "moduleName": "api"}]
-                                },
-                            },
-                        },
-                    ],
-                },
                 f"""specVersion: 3
 appVersion: '1.0'
 app:
@@ -411,61 +292,6 @@ module:
       - "bk-iam"
       - "bk-user"
 """,
-                {
-                    "specVersion": 3,
-                    "appVersion": "1.0",
-                    "app": {
-                        "region": "default",
-                        "bkAppCode": "foo-app",
-                        "bkAppName": "默认应用名称",
-                        "market": {
-                            "category": "运维工具",
-                            "introduction": "应用简介",
-                            "description": "应用描述",
-                            "displayOptions": {
-                                "width": 800,
-                                "height": 600,
-                                "openMode": "desktop",
-                                "isWinMaximize": False,
-                                "visible": True,
-                            },
-                        },
-                    },
-                    "module": {
-                        "name": "default",
-                        "sourceDir": "src/frontend",
-                        "language": "NodeJS",
-                        "spec": {
-                            "addons": [{"name": "mysql"}, {"name": "rabbitmq"}],
-                            "configuration": {
-                                "env": [{"name": "FOO", "value": "value_of_foo", "description": "环境变量描述文件"}]
-                            },
-                            "processes": [
-                                {
-                                    "name": "web",
-                                    "procCommand": "npm run server",
-                                    "resQuotaPlan": "4C1G",
-                                    "replicas": 2,
-                                    "probes": {
-                                        "liveness": {"exec": {"command": ["cat"]}},
-                                        "readiness": {"httpGet": {"path": "/healthz", "port": 80}},
-                                    },
-                                    "services": [
-                                        {
-                                            "name": "web",
-                                            "protocol": "TCP",
-                                            "targetPort": settings.CONTAINER_PORT,
-                                            "port": 80,
-                                            "exposedType": {"name": "bk/http"},
-                                        }
-                                    ],
-                                }
-                            ],
-                            "hooks": {"preRelease": {"procCommand": "bin/pre-release.sh"}},
-                            "svcDiscovery": {"bkSaaS": [{"bkAppCode": "bk-iam"}, {"bkAppCode": "bk-user"}]},
-                        },
-                    },
-                },
                 f"""specVersion: 3
 appVersion: '1.0'
 app:
@@ -525,15 +351,48 @@ module:
         - bkAppCode: bk-user
 """,
             ),
+            # Test 3: mini template app desc without module.source_dir
+            (
+                """spec_version: 2
+module:
+  language: Python
+  processes:
+    web:
+      command: gunicorn wsgi -w 4 -b [::]:${PORT}
+    worker:
+      command: celery -A app -l info
+""",
+                f"""specVersion: 3
+module:
+  name: default
+  language: Python
+  spec:
+    processes:
+      - name: web
+        procCommand: gunicorn wsgi -w 4 -b [::]:${{PORT}}
+        services:
+          - name: web
+            protocol: TCP
+            exposedType:
+              name: bk/http
+            targetPort: {settings.CONTAINER_PORT}
+            port: 80
+      - name: worker
+        procCommand: celery -A app -l info
+        services:
+          - name: worker
+            protocol: TCP
+            targetPort: {settings.CONTAINER_PORT}
+            port: 80
+""",
+            ),
         ],
     )
-    def test_app_desc_transform(self, api_client, spec2_yaml, expected_spec3_data, expected_spec3_yaml):
+    def test_app_desc_transform(self, api_client, spec2_yaml, expected_spec3_yaml):
         """测试应用描述文件转换接口"""
         response = api_client.post(
             reverse("api.tools.app_desc.transform"), data=spec2_yaml, content_type="application/yaml"
         )
-        output_data = yaml.safe_load(response.content)
-        assert output_data == expected_spec3_data
 
         output_yaml = response.content.decode(settings.DEFAULT_CHARSET)
         assert output_yaml == expected_spec3_yaml
